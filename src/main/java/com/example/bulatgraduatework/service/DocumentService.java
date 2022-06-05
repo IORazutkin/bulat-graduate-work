@@ -3,10 +3,13 @@ package com.example.bulatgraduatework.service;
 import com.example.bulatgraduatework.dto.DocumentDto;
 import com.example.bulatgraduatework.entity.Document;
 import com.example.bulatgraduatework.entity.Task;
+import com.example.bulatgraduatework.entity.institute.Institute;
 import com.example.bulatgraduatework.entity.user.Deanery;
+import com.example.bulatgraduatework.entity.user.Teacher;
 import com.example.bulatgraduatework.entity.user.User;
 import com.example.bulatgraduatework.exception.NotFoundException;
 import com.example.bulatgraduatework.repo.DocumentRepo;
+import com.example.bulatgraduatework.service.user.TeacherService;
 import com.example.bulatgraduatework.util.CopyProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,9 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.print.Doc;
 import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class DocumentService {
   private final DocumentRepo documentRepo;
   private final FileService fileService;
+  private final TeacherService teacherService;
 
   public Document findById (Long id) {
     Optional<Document> documentOptional = documentRepo.findById(id);
@@ -35,11 +37,24 @@ public class DocumentService {
     throw new NotFoundException();
   }
 
+  public Map<String, Integer> getDocumentStatsByInstitute (Institute institute) {
+    List<Teacher> teachers = teacherService.findByInstitute(institute);
+
+    Map<String, Integer> result = new HashMap<>();
+    teachers.forEach(teacher -> {
+      result.put(teacher.getUser().getUser().getFullName(), documentRepo.countAllByTask_Teacher(teacher));
+    });
+
+    return result;
+  }
+
   public List<Document> findDeaneryDocs () {
     List<Document> documents = documentRepo.findAllByIsDeletedIsFalseAndVerifiedStatusIsNull();
     documents.addAll(documentRepo.findAllByIsDeletedIsFalseAndTaskIsNull());
     return documents;
   }
+
+
 
   public List<Document> findUserDocs () {
     return documentRepo.findAllByIsDeletedIsFalseAndTaskIsNull();

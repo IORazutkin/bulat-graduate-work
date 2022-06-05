@@ -3,9 +3,11 @@ package com.example.bulatgraduatework.api;
 import com.example.bulatgraduatework.dto.DocumentDto;
 import com.example.bulatgraduatework.entity.Document;
 import com.example.bulatgraduatework.entity.Task;
+import com.example.bulatgraduatework.entity.institute.Institute;
 import com.example.bulatgraduatework.entity.user.User;
 import com.example.bulatgraduatework.service.DocumentService;
 import com.example.bulatgraduatework.service.TaskService;
+import com.example.bulatgraduatework.service.institute.InstituteService;
 import com.example.bulatgraduatework.view.DataView;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/document")
@@ -23,6 +26,7 @@ import java.util.List;
 public class DocumentController {
   private final DocumentService documentService;
   private final TaskService taskService;
+  private final InstituteService instituteService;
 
   @JsonView(DataView.class)
   @GetMapping("actual")
@@ -37,6 +41,14 @@ public class DocumentController {
   @GetMapping("deanery")
   public ResponseEntity<List<Document>> findDeanery () {
     return ResponseEntity.ok(documentService.findDeaneryDocs());
+  }
+
+  @JsonView(DataView.class)
+  @GetMapping("deanery/stats/{instituteId}")
+  public ResponseEntity<Map<String, Integer>> getDocumentsStat (@PathVariable String instituteId) {
+    Institute institute = instituteService.findById(Long.parseLong(instituteId));
+
+    return ResponseEntity.ok(documentService.getDocumentStatsByInstitute(institute));
   }
 
   @JsonView(DataView.class)
